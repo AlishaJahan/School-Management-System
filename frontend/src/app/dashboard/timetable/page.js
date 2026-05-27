@@ -95,12 +95,32 @@ export default function TeacherTimetable() {
   };
 
   // State maps holding active modifications
-  const [csSchedule, setCsSchedule] = useState({});
-  const [mathsSchedule, setMathsSchedule] = useState({});
+  const [teachersList, setTeachersList] = useState([
+    { name: "Alisha Jahan", subject: "Computer Science" },
+    { name: "Rohan Sharma", subject: "Mathematics" }
+  ]);
+  const [activeSchedule, setActiveSchedule] = useState({});
+  const currentSchedule = activeSchedule;
 
   // Drag and Drop active states
   const [draggedSlotKey, setDraggedSlotKey] = useState(null);
   const [dragOverSlotKey, setDragOverSlotKey] = useState(null);
+
+  // Fetch all registered teachers from the backend API
+  const fetchAllTeachers = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("http://localhost:5000/api/teachers", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setTeachersList(data);
+      }
+    } catch (err) {
+      console.log("Failed to fetch teachers, using fallback/cached list.", err.message);
+    }
+  };
 
   useEffect(() => {
     // 1. Get logged in user details
@@ -122,38 +142,43 @@ export default function TeacherTimetable() {
       }
     }
 
-    // 2. Load custom persistent timetables from localStorage
-    const savedCS = localStorage.getItem("custom_timetable_CS");
-    if (savedCS) {
-      setCsSchedule(JSON.parse(savedCS));
-    } else {
-      setCsSchedule(defaultCS);
-    }
-
-    const savedMaths = localStorage.getItem("custom_timetable_Maths");
-    if (savedMaths) {
-      setMathsSchedule(JSON.parse(savedMaths));
-    } else {
-      setMathsSchedule(defaultMaths);
-    }
+    fetchAllTeachers();
   }, []);
 
-  // Update teacher subject when admin toggles the selected teacher
+  // Update teacher subject when teachersList or selectedTeacher changes
   useEffect(() => {
-    if (selectedTeacher.toLowerCase().includes("rohan")) {
-      setTeacherSubject("Mathematics");
-    } else if (selectedTeacher.toLowerCase().includes("alisha")) {
-      setTeacherSubject("Computer Science");
+    const matched = teachersList.find(t => t.name === selectedTeacher);
+    if (matched) {
+      setTeacherSubject(matched.subject || "Early Childhood Development");
     } else {
-      setTeacherSubject("Administration");
+      if (selectedTeacher.toLowerCase().includes("rohan")) {
+        setTeacherSubject("Mathematics");
+      } else if (selectedTeacher.toLowerCase().includes("alisha")) {
+        setTeacherSubject("Computer Science");
+      } else {
+        setTeacherSubject("Academic Faculty");
+      }
     }
-  }, [selectedTeacher]);
+  }, [selectedTeacher, teachersList]);
 
-  const getActiveSchedule = () => {
-    return teacherSubject === "Mathematics" ? mathsSchedule : csSchedule;
-  };
-
-  const currentSchedule = getActiveSchedule();
+  // Load custom persistent timetable for the selected teacher
+  useEffect(() => {
+    if (!selectedTeacher) return;
+    const sanitizedKey = `custom_timetable_${selectedTeacher.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    const saved = localStorage.getItem(sanitizedKey);
+    if (saved) {
+      setActiveSchedule(JSON.parse(saved));
+    } else {
+      // Fallback defaults
+      if (selectedTeacher === "Alisha Jahan" || teacherSubject === "Computer Science") {
+        setActiveSchedule(defaultCS);
+      } else if (selectedTeacher === "Rohan Sharma" || teacherSubject === "Mathematics") {
+        setActiveSchedule(defaultMaths);
+      } else {
+        setActiveSchedule({});
+      }
+    }
+  }, [selectedTeacher, teacherSubject]);
 
   const handleCellClick = (day, periodId, slotData) => {
     // Only Admin has master credentials to edit timetables
@@ -180,7 +205,7 @@ export default function TeacherTimetable() {
     e.preventDefault();
     setSuccess("");
 
-    const updatedSchedule = { ...currentSchedule };
+    const updatedSchedule = { ...activeSchedule };
 
     if (formData.isFree) {
       delete updatedSchedule[editSlotKey];
@@ -193,14 +218,9 @@ export default function TeacherTimetable() {
       };
     }
 
-    // Save state and persist in localStorage
-    if (teacherSubject === "Mathematics") {
-      setMathsSchedule(updatedSchedule);
-      localStorage.setItem("custom_timetable_Maths", JSON.stringify(updatedSchedule));
-    } else {
-      setCsSchedule(updatedSchedule);
-      localStorage.setItem("custom_timetable_CS", JSON.stringify(updatedSchedule));
-    }
+    setActiveSchedule(updatedSchedule);
+    const sanitizedKey = `custom_timetable_${selectedTeacher.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    localStorage.setItem(sanitizedKey, JSON.stringify(updatedSchedule));
 
     setEditModalOpen(false);
     setSuccess(`Timetable slot for ${editDay} (${editPeriodName}) updated successfully!`);
@@ -245,7 +265,7 @@ export default function TeacherTimetable() {
       return;
     }
 
-    const updatedSchedule = { ...currentSchedule };
+    const updatedSchedule = { ...activeSchedule };
     const sourceData = updatedSchedule[draggedSlotKey];
     const targetData = updatedSchedule[targetSlotKey];
 
@@ -260,14 +280,9 @@ export default function TeacherTimetable() {
         delete updatedSchedule[draggedSlotKey];
       }
 
-      // Save state and persist in localStorage
-      if (teacherSubject === "Mathematics") {
-        setMathsSchedule(updatedSchedule);
-        localStorage.setItem("custom_timetable_Maths", JSON.stringify(updatedSchedule));
-      } else {
-        setCsSchedule(updatedSchedule);
-        localStorage.setItem("custom_timetable_CS", JSON.stringify(updatedSchedule));
-      }
+      setActiveSchedule(updatedSchedule);
+      const sanitizedKey = `custom_timetable_${selectedTeacher.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      localStorage.setItem(sanitizedKey, JSON.stringify(updatedSchedule));
 
       const sourceDay = draggedSlotKey.split("-")[0];
       const sourcePeriodId = draggedSlotKey.split("-")[1];
@@ -315,8 +330,11 @@ export default function TeacherTimetable() {
               onChange={(e) => setSelectedTeacher(e.target.value)}
               className="bg-[#09090b] text-sm text-cyan-300 font-bold border border-white/10 rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-400 transition-colors animate-pulse"
             >
-              <option value="Alisha Jahan">Alisha Jahan (CS)</option>
-              <option value="Rohan Sharma">Rohan Sharma (Maths)</option>
+              {teachersList.map((teacher) => (
+                <option key={teacher.name} value={teacher.name}>
+                  {teacher.name} ({teacher.subject || "Faculty"})
+                </option>
+              ))}
             </select>
           </div>
         )}

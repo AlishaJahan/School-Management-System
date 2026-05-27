@@ -3,8 +3,37 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../components/Modal";
 
+const defaultDummyStudents = [
+  { student_id: 1, name: "Rahul Verma", email: "rahul@school.com", roll_no: "STU-2026-001", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
+  { student_id: 2, name: "Sana Khan", email: "sana@school.com", roll_no: "STU-2026-002", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
+  { student_id: 3, name: "Priya Sharma", email: "priya@school.com", roll_no: "STU-2026-003", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
+  { student_id: 4, name: "Amit Patel", email: "amit@school.com", roll_no: "STU-2026-004", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
+  { student_id: 5, name: "Sneha Reddy", email: "sneha@school.com", roll_no: "STU-2026-005", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
+  { student_id: 6, name: "Vikram Singh", email: "vikram@school.com", roll_no: "STU-2026-006", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
+  { student_id: 7, name: "Aarav Mehta", email: "aarav@school.com", roll_no: "STU-2026-007", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
+  { student_id: 8, name: "Diya Iyer", email: "diya@school.com", roll_no: "STU-2026-008", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
+  { student_id: 9, name: "Kabir Sen", email: "kabir@school.com", roll_no: "STU-2026-009", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
+  { student_id: 10, name: "Neha Gupta", email: "neha@school.com", roll_no: "STU-2026-010", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
+  { student_id: 11, name: "Rohan Das", email: "rohan@school.com", roll_no: "STU-2026-011", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
+  { student_id: 12, name: "Ananya Roy", email: "ananya@school.com", roll_no: "STU-2026-012", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
+  { student_id: 13, name: "Yash Malhotra", email: "yash@school.com", roll_no: "STU-2026-013", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
+  { student_id: 14, name: "Tanvi Shah", email: "tanvi@school.com", roll_no: "STU-2026-014", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
+  { student_id: 15, name: "Abhinav Mishra", email: "abhinav@school.com", roll_no: "STU-2026-015", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" }
+];
+
 export default function StudentsManagement() {
   const [students, setStudents] = useState([]);
+  const [allStudents, setAllStudents] = useState(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("students_cache");
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return defaultDummyStudents;
+  });
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,8 +69,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      color: "indigo",
-      studentCount: 5
+      color: "indigo"
     },
     {
       grade: "UKG",
@@ -52,8 +80,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      color: "violet",
-      studentCount: 5
+      color: "violet"
     },
     {
       grade: "Class 1",
@@ -64,8 +91,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       ),
-      color: "cyan",
-      studentCount: 5
+      color: "cyan"
     },
     {
       grade: "Class 2",
@@ -76,8 +102,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
       ),
-      color: "emerald",
-      studentCount: 5
+      color: "emerald"
     },
     {
       grade: "Class 3",
@@ -88,8 +113,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
         </svg>
       ),
-      color: "indigo",
-      studentCount: 5
+      color: "indigo"
     },
     {
       grade: "Class 4",
@@ -100,8 +124,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2m0 0l-2-2m2 2l-2 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      color: "violet",
-      studentCount: 5
+      color: "violet"
     },
     {
       grade: "Class 5",
@@ -112,8 +135,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
       ),
-      color: "cyan",
-      studentCount: 5
+      color: "cyan"
     },
     {
       grade: "Class 6",
@@ -124,8 +146,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 113.536 0V21h-2v-4.757z" />
         </svg>
       ),
-      color: "emerald",
-      studentCount: 5
+      color: "emerald"
     },
     {
       grade: "Class 7",
@@ -136,8 +157,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
         </svg>
       ),
-      color: "indigo",
-      studentCount: 5
+      color: "indigo"
     },
     {
       grade: "Class 8",
@@ -148,8 +168,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       ),
-      color: "violet",
-      studentCount: 5
+      color: "violet"
     },
     {
       grade: "Class 9",
@@ -160,8 +179,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
         </svg>
       ),
-      color: "cyan",
-      studentCount: 5
+      color: "cyan"
     },
     {
       grade: "Class 10",
@@ -172,8 +190,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       ),
-      color: "indigo",
-      studentCount: 5
+      color: "indigo"
     },
     {
       grade: "Class 11-A",
@@ -184,8 +201,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0-6v2m0-5h.01M19 12a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       ),
-      color: "cyan",
-      studentCount: 5
+      color: "cyan"
     },
     {
       grade: "Class 11-B",
@@ -196,8 +212,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
       ),
-      color: "indigo",
-      studentCount: 5
+      color: "indigo"
     },
     {
       grade: "Class 12-A",
@@ -208,8 +223,7 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
         </svg>
       ),
-      color: "violet",
-      studentCount: 5
+      color: "violet"
     },
     {
       grade: "Class 12-B",
@@ -220,10 +234,47 @@ export default function StudentsManagement() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
         </svg>
       ),
-      color: "emerald",
-      studentCount: 5
+      color: "emerald"
     }
   ];
+
+  const fetchAllStudents = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("http://localhost:5000/api/students", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setAllStudents(data);
+        localStorage.setItem("students_cache", JSON.stringify(data));
+        
+        // Update dashboard cache too
+        const cachedCounts = localStorage.getItem("dashboard_counts");
+        let updatedCounts = { students: data.length, teachers: 4 };
+        if (cachedCounts) {
+          try {
+            const parsed = JSON.parse(cachedCounts);
+            updatedCounts = { ...parsed, students: data.length };
+          } catch (e) {}
+        }
+        localStorage.setItem("dashboard_counts", JSON.stringify(updatedCounts));
+      }
+    } catch (err) {
+      console.log("Failed to fetch all students, using cached/mock list.");
+    }
+  };
+
+  const getStudentCountForClass = (className) => {
+    return allStudents.filter(student => {
+      const studentClass = student.class_grade.toLowerCase();
+      const target = className.toLowerCase();
+      if (target === "class 10") {
+        return studentClass === "class 10" || studentClass === "class 10-a";
+      }
+      return studentClass === target;
+    }).length;
+  };
 
   const fetchStudents = async (searchTerm = "") => {
     setLoading(true);
@@ -255,54 +306,45 @@ export default function StudentsManagement() {
     } catch (err) {
       setError(err.message || "Failed to connect to database. Loading dummy student rolls.");
       
-      // Mock / fallback dummy student records matched to target class
-      const dummyData = {
-        "Class 10-A": [
-          { student_id: 1, name: "Rahul Verma", email: "rahul@school.com", roll_no: "STU-2026-001", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 3, name: "Priya Sharma", email: "priya@school.com", roll_no: "STU-2026-003", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 4, name: "Amit Patel", email: "amit@school.com", roll_no: "STU-2026-004", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 5, name: "Sneha Reddy", email: "sneha@school.com", roll_no: "STU-2026-005", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 6, name: "Vikram Singh", email: "vikram@school.com", roll_no: "STU-2026-006", class_grade: "Class 10-A", status: "active", enrollment_date: "2026-04-01" }
-        ],
-        "Class 12-B": [
-          { student_id: 2, name: "Sana Khan", email: "sana@school.com", roll_no: "STU-2026-002", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
-          { student_id: 7, name: "Aarav Mehta", email: "aarav@school.com", roll_no: "STU-2026-007", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
-          { student_id: 8, name: "Diya Iyer", email: "diya@school.com", roll_no: "STU-2026-008", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
-          { student_id: 9, name: "Kabir Sen", email: "kabir@school.com", roll_no: "STU-2026-009", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" },
-          { student_id: 10, name: "Neha Gupta", email: "neha@school.com", roll_no: "STU-2026-010", class_grade: "Class 12-B", status: "active", enrollment_date: "2026-04-02" }
-        ],
-        "Class 11-A": [
-          { student_id: 11, name: "Rohan Das", email: "rohan@school.com", roll_no: "STU-2026-011", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
-          { student_id: 12, name: "Ananya Roy", email: "ananya@school.com", roll_no: "STU-2026-012", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
-          { student_id: 13, name: "Yash Malhotra", email: "yash@school.com", roll_no: "STU-2026-013", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
-          { student_id: 14, name: "Tanvi Shah", email: "tanvi@school.com", roll_no: "STU-2026-014", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" },
-          { student_id: 15, name: "Abhinav Mishra", email: "abhinav@school.com", roll_no: "STU-2026-015", class_grade: "Class 11-A", status: "active", enrollment_date: "2026-04-03" }
-        ]
-      };
+      const classFiltered = allStudents.filter(student => {
+        const studentClass = student.class_grade.toLowerCase();
+        const selected = selectedClass.toLowerCase();
+        
+        let match = false;
+        if (selected === "class 10") {
+          match = studentClass === "class 10" || studentClass === "class 10-a";
+        } else {
+          match = studentClass === selected;
+        }
 
-      let selectedClassData = dummyData[selectedClass];
-      if (!selectedClassData) {
-        // Dynamically seed 5 premium dummy students for this particular class
+        if (searchTerm) {
+          const s = searchTerm.toLowerCase();
+          match = match && (
+            student.name.toLowerCase().includes(s) ||
+            student.email.toLowerCase().includes(s) ||
+            student.roll_no.toLowerCase().includes(s)
+          );
+        }
+        return match;
+      });
+
+      if (classFiltered.length === 0 && !searchTerm) {
         const safeKey = selectedClass.toLowerCase().replace(/[^a-z0-9]/g, "");
         const rollKey = selectedClass.toUpperCase().replace(/[^A-Z0-9]/g, "");
-        selectedClassData = [
-          { student_id: 101, name: `Aarav Sharma (${selectedClass})`, email: `aarav.${safeKey}@school.com`, roll_no: `STU-${rollKey}-001`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 102, name: `Isha Patel (${selectedClass})`, email: `isha.${safeKey}@school.com`, roll_no: `STU-${rollKey}-002`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 103, name: `Rohan Verma (${selectedClass})`, email: `rohan.${safeKey}@school.com`, roll_no: `STU-${rollKey}-003`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 104, name: `Diya Rao (${selectedClass})`, email: `diya.${safeKey}@school.com`, roll_no: `STU-${rollKey}-004`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
-          { student_id: 105, name: `Kabir Singh (${selectedClass})`, email: `kabir.${safeKey}@school.com`, roll_no: `STU-${rollKey}-005`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" }
+        const seeded = [
+          { student_id: Date.now() + 1, name: `Aarav Sharma (${selectedClass})`, email: `aarav.${safeKey}@school.com`, roll_no: `STU-${rollKey}-001`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
+          { student_id: Date.now() + 2, name: `Isha Patel (${selectedClass})`, email: `isha.${safeKey}@school.com`, roll_no: `STU-${rollKey}-002`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
+          { student_id: Date.now() + 3, name: `Rohan Verma (${selectedClass})`, email: `rohan.${safeKey}@school.com`, roll_no: `STU-${rollKey}-003`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
+          { student_id: Date.now() + 4, name: `Diya Rao (${selectedClass})`, email: `diya.${safeKey}@school.com`, roll_no: `STU-${rollKey}-004`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" },
+          { student_id: Date.now() + 5, name: `Kabir Singh (${selectedClass})`, email: `kabir.${safeKey}@school.com`, roll_no: `STU-${rollKey}-005`, class_grade: selectedClass, status: "active", enrollment_date: "2026-04-01" }
         ];
-      }
-
-      if (searchTerm) {
-        const filtered = selectedClassData.filter(s => 
-          s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.roll_no.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setStudents(filtered);
+        
+        const updatedAll = [...allStudents, ...seeded];
+        setAllStudents(updatedAll);
+        localStorage.setItem("students_cache", JSON.stringify(updatedAll));
+        setStudents(seeded);
       } else {
-        setStudents(selectedClassData);
+        setStudents(classFiltered);
       }
     } finally {
       setLoading(false);
@@ -311,6 +353,7 @@ export default function StudentsManagement() {
 
   useEffect(() => {
     fetchStudents(search);
+    fetchAllStudents();
   }, [selectedClass]);
 
   const handleSearchChange = (e) => {
@@ -388,10 +431,44 @@ export default function StudentsManagement() {
       setSuccess(modalMode === "add" ? "Student registered successfully!" : "Student profile updated successfully!");
       setModalOpen(false);
       fetchStudents(search);
+      fetchAllStudents();
 
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
-      setError(err.message || "Operation failed.");
+      if (err.message.includes("Failed to connect") || err.message.includes("fetch") || err.message.includes("NetworkError")) {
+        // Fallback local operations
+        if (modalMode === "add") {
+          const newStudent = {
+            student_id: Date.now(),
+            name: formData.name,
+            email: formData.email,
+            roll_no: formData.roll_no,
+            class_grade: formData.class_grade,
+            status: "active",
+            enrollment_date: formData.enrollment_date
+          };
+          const updatedAll = [newStudent, ...allStudents];
+          setAllStudents(updatedAll);
+          localStorage.setItem("students_cache", JSON.stringify(updatedAll));
+        } else {
+          const updatedAll = allStudents.map(s => 
+            s.student_id === selectedStudent.student_id
+              ? { ...s, name: formData.name, email: formData.email, roll_no: formData.roll_no, class_grade: formData.class_grade, status: formData.status }
+              : s
+          );
+          setAllStudents(updatedAll);
+          localStorage.setItem("students_cache", JSON.stringify(updatedAll));
+        }
+        setSuccess(modalMode === "add" ? "Student registered locally successfully!" : "Student profile updated locally successfully!");
+        setModalOpen(false);
+        setTimeout(() => {
+          fetchStudents(search);
+          fetchAllStudents();
+        }, 100);
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        setError(err.message || "Operation failed.");
+      }
     }
   };
 
@@ -413,9 +490,22 @@ export default function StudentsManagement() {
 
       setSuccess("Student record successfully deleted.");
       fetchStudents(search);
+      fetchAllStudents();
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
-      setError(err.message || "Failed to delete student.");
+      if (err.message.includes("Failed to connect") || err.message.includes("fetch") || err.message.includes("NetworkError")) {
+        const updatedAll = allStudents.filter(s => s.student_id !== id);
+        setAllStudents(updatedAll);
+        localStorage.setItem("students_cache", JSON.stringify(updatedAll));
+        setSuccess("Student record successfully deleted locally.");
+        setTimeout(() => {
+          fetchStudents(search);
+          fetchAllStudents();
+        }, 100);
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        setError(err.message || "Failed to delete student.");
+      }
     }
   };
 
@@ -513,7 +603,9 @@ export default function StudentsManagement() {
                   </h3>
                   <div className="flex flex-col gap-0.5 text-xs text-zinc-400 font-semibold">
                     <span>Subject: {item.subject}</span>
-                    <span className="text-[10px] text-zinc-500 mt-1 uppercase tracking-wider">📁 Registry Active</span>
+                    <span className="text-[11px] text-zinc-300 font-bold mt-1.5 flex items-center gap-1.5 bg-white/5 py-1 px-2.5 rounded-lg border border-white/5 w-fit">
+                      🎓 {getStudentCountForClass(item.grade)} Enrolled
+                    </span>
                   </div>
                 </div>
 

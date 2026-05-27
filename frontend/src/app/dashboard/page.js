@@ -6,7 +6,17 @@ import DashboardCard from "../../components/DashboardCard";
 
 export default function DashboardOverview() {
   const [currentUser, setCurrentUser] = useState({ name: "Administrator", role: "admin" });
-  const [counts, setCounts] = useState({ students: 5, teachers: 4 });
+  const [counts, setCounts] = useState(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("dashboard_counts");
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return { students: 5, teachers: 4 };
+  });
 
   // Interactive To-Do List State
   const [todoInput, setTodoInput] = useState("");
@@ -51,10 +61,12 @@ export default function DashboardOverview() {
         }
 
         if (Array.isArray(students) && Array.isArray(teachers)) {
-          setCounts({
+          const newCounts = {
             students: students.length,
             teachers: teachers.length
-          });
+          };
+          setCounts(newCounts);
+          localStorage.setItem("dashboard_counts", JSON.stringify(newCounts));
         }
       } catch (err) {
         console.log("Database fetch failed. Using fallback seed counts:", err.message);

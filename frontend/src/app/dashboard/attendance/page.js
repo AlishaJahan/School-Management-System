@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Modal from "../../../components/Modal";
 
 export default function MarkAttendance() {
   const [currentUser, setCurrentUser] = useState({ name: "System Administrator", role: "admin" });
@@ -18,6 +19,12 @@ export default function MarkAttendance() {
 
   // Student active logs state
   const [activeMonth, setActiveMonth] = useState("May 2026");
+
+  // History states
+  const [activeSubTab, setActiveSubTab] = useState("record"); // "record" or "history"
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistoryRecord, setSelectedHistoryRecord] = useState(null);
+  const [historyRecords, setHistoryRecords] = useState([]);
 
   const monthlyStudentStats = {
     "May 2026": {
@@ -334,6 +341,16 @@ export default function MarkAttendance() {
         console.error(e);
       }
     }
+
+    // Load attendance records
+    const savedRecordsStr = localStorage.getItem("attendance_records");
+    if (savedRecordsStr) {
+      try {
+        setHistoryRecords(JSON.parse(savedRecordsStr));
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }, []);
 
   // Update visible students when selected class switches
@@ -382,8 +399,32 @@ export default function MarkAttendance() {
     const presentCount = students.filter(s => s.status === "present").length;
     const absentCount = students.filter(s => s.status === "absent").length;
 
+    const newRecord = {
+      id: Date.now(),
+      date: attendanceDate,
+      type: "student",
+      class_grade: selectedClass,
+      present_count: presentCount,
+      absent_count: absentCount,
+      total_count: students.length,
+      roll_call: students.map(s => ({ name: s.name, roll_no: s.roll_no, status: s.status }))
+    };
+
     setTimeout(() => {
       setLoading(false);
+
+      const savedRecordsStr = localStorage.getItem("attendance_records") || "[]";
+      let savedRecords = [];
+      try {
+        savedRecords = JSON.parse(savedRecordsStr);
+      } catch (err) {
+        console.error(err);
+      }
+      
+      const updatedRecords = [newRecord, ...savedRecords];
+      localStorage.setItem("attendance_records", JSON.stringify(updatedRecords));
+      setHistoryRecords(updatedRecords);
+
       setSuccess(`Attendance successfully saved! submitted for ${selectedClass} on ${attendanceDate}. Status: ${presentCount} Present, ${absentCount} Absent.`);
       setTimeout(() => {
         setSuccess("");
@@ -401,8 +442,32 @@ export default function MarkAttendance() {
     const presentCount = teachers.filter(t => t.status === "present").length;
     const absentCount = teachers.filter(t => t.status === "absent").length;
 
+    const newRecord = {
+      id: Date.now(),
+      date: attendanceDate,
+      type: "teacher",
+      class_grade: "Faculty Staff",
+      present_count: presentCount,
+      absent_count: absentCount,
+      total_count: teachers.length,
+      roll_call: teachers.map(t => ({ name: t.name, subject: t.subject, status: t.status }))
+    };
+
     setTimeout(() => {
       setLoading(false);
+
+      const savedRecordsStr = localStorage.getItem("attendance_records") || "[]";
+      let savedRecords = [];
+      try {
+        savedRecords = JSON.parse(savedRecordsStr);
+      } catch (err) {
+        console.error(err);
+      }
+      
+      const updatedRecords = [newRecord, ...savedRecords];
+      localStorage.setItem("attendance_records", JSON.stringify(updatedRecords));
+      setHistoryRecords(updatedRecords);
+
       setSuccess(`Teacher Attendance successfully registered! (Total: ${presentCount} Present, ${absentCount} Absent) for Date: ${attendanceDate}`);
       setTimeout(() => {
         setSuccess("");
@@ -910,6 +975,28 @@ export default function MarkAttendance() {
         <p className="text-zinc-400 text-sm">Select target registers to record roll calls for students or specialized academic staff</p>
       </div>
 
+      {/* Tab Selector */}
+      {step === 1 && (currentUser.role === "admin" || currentUser.role === "teacher") && (
+        <div className="flex border-b border-white/5 gap-2 mt-2 select-none">
+          <button
+            onClick={() => setActiveSubTab("record")}
+            className={`pb-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-all ${
+              activeSubTab === "record" ? "border-indigo-400 text-indigo-300" : "border-transparent text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Record Roll Call
+          </button>
+          <button
+            onClick={() => setActiveSubTab("history")}
+            className={`pb-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-all ${
+              activeSubTab === "history" ? "border-indigo-400 text-indigo-300" : "border-transparent text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Attendance History Logs
+          </button>
+        </div>
+      )}
+
       {/* Success/Error Alerts */}
       {success && (
         <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-sm font-semibold animate-fade-in flex items-center gap-3">
@@ -929,7 +1016,7 @@ export default function MarkAttendance() {
       )}
 
       {/* Step 1: Selection gateway (Students Assigned Classes OR Teachers Attendance Option) */}
-      {step === 1 && (() => {
+      {step === 1 && activeSubTab === "record" && (() => {
         const checkBlock = isDateHolidayOrSunday(attendanceDate);
         return (
           <div className="flex flex-col gap-8 animate-fade-in">
@@ -1055,6 +1142,80 @@ export default function MarkAttendance() {
           </div>
         );
       })()}
+
+      {/* Step 1: Attendance History Tab */}
+      {step === 1 && activeSubTab === "history" && (
+        <div className="flex flex-col gap-6 animate-fade-in">
+          <div className="glass-card rounded-2xl overflow-hidden shadow-2xl relative border-white/5">
+            <div className="p-6 border-b border-white/5 bg-white/[0.01]">
+              <h4 className="font-extrabold text-white">Submitted Attendance Registry History</h4>
+              <p className="text-xs text-zinc-500 mt-1">Review verified historical attendance logs for classes and teachers.</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse select-none">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/[0.02] text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    <th className="px-6 py-5">Calendar Date</th>
+                    <th className="px-6 py-5">Roll Type</th>
+                    <th className="px-6 py-5">Target Class / Department</th>
+                    <th className="px-6 py-5 text-center">Present / Total</th>
+                    <th className="px-6 py-5 text-center">Absent</th>
+                    <th className="px-6 py-5 text-right">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {historyRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-12 text-zinc-500 font-semibold text-sm">
+                        No submitted attendance records found. Mark a class or teacher register to populate logs.
+                      </td>
+                    </tr>
+                  ) : (
+                    historyRecords.map((record) => (
+                      <tr key={record.id} className="hover:bg-white/[0.01] transition-colors group">
+                        <td className="px-6 py-5 font-mono text-xs font-semibold text-indigo-300">
+                          {new Date(record.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
+                            record.type === "student"
+                              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                              : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                          }`}>
+                            {record.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 font-bold text-sm text-zinc-300">
+                          {record.class_grade}
+                        </td>
+                        <td className="px-6 py-5 text-center font-bold text-emerald-400 text-sm">
+                          {record.present_count} <span className="text-zinc-500 text-xs font-normal">/ {record.total_count}</span>
+                        </td>
+                        <td className="px-6 py-5 text-center font-bold text-rose-400 text-sm">
+                          {record.absent_count}
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedHistoryRecord(record);
+                              setHistoryModalOpen(true);
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl border border-white/5 bg-white/5 text-xs text-zinc-400 hover:text-white hover:bg-white/10 font-bold transition-all"
+                          >
+                            View Registry
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Step 2: Marking Attendance Screen */}
       {step === 2 && (
@@ -1318,6 +1479,81 @@ export default function MarkAttendance() {
         </div>
       )}
 
+      {/* History Details Modal overlay */}
+      {historyModalOpen && selectedHistoryRecord && (
+        <Modal
+          isOpen={historyModalOpen}
+          onClose={() => setHistoryModalOpen(false)}
+          title={`Roll Call Registry: ${selectedHistoryRecord.class_grade} (${new Date(selectedHistoryRecord.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })})`}
+        >
+          <div className="flex flex-col gap-5 select-none">
+            <div className="grid grid-cols-3 gap-2 text-center py-1">
+              <div className="flex flex-col gap-0.5 p-3 rounded-2xl bg-white/[0.01] border border-white/5">
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Total Size</span>
+                <span className="text-lg font-extrabold text-white">{selectedHistoryRecord.total_count}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Present</span>
+                <span className="text-lg font-extrabold text-emerald-400">{selectedHistoryRecord.present_count}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 p-3 rounded-2xl bg-rose-500/5 border border-rose-500/20">
+                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Absent</span>
+                <span className="text-lg font-extrabold text-rose-400">{selectedHistoryRecord.absent_count}</span>
+              </div>
+            </div>
+
+            <div className="max-h-[350px] overflow-y-auto pr-1">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest">
+                    <th className="py-2.5">Name</th>
+                    <th className="py-2.5">{selectedHistoryRecord.type === "student" ? "Roll Number" : "Subject"}</th>
+                    <th className="py-2.5 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {selectedHistoryRecord.roll_call?.map((member, i) => (
+                    <tr key={i} className="text-xs">
+                      <td className="py-3 font-bold text-white flex items-center gap-2">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] uppercase font-bold ${
+                          selectedHistoryRecord.type === 'student' ? 'bg-indigo-500/10 text-indigo-300' : 'bg-cyan-500/10 text-cyan-300'
+                        }`}>
+                          {member.name.substring(0, 2)}
+                        </div>
+                        {member.name}
+                      </td>
+                      <td className="py-3 font-medium text-zinc-400 font-mono">
+                        {selectedHistoryRecord.type === "student" ? member.roll_no : member.subject}
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
+                          member.status === "present"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        }`}>
+                          {member.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <button
+                type="button"
+                onClick={() => setHistoryModalOpen(false)}
+                className="w-full py-3.5 rounded-xl border border-white/10 text-zinc-300 font-bold text-sm hover:bg-white/5 transition-all text-center"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
     </div>
   );
+}
 }
