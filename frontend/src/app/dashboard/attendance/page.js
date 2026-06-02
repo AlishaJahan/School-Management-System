@@ -520,11 +520,11 @@ export default function MarkAttendance() {
       return { isBlocked: true, reason: matchedHoliday.name };
     }
     
-    const summerStart = new Date("2026-05-25");
-    const summerEnd = new Date("2026-06-30");
-    if (dateObj >= summerStart && dateObj <= summerEnd) {
-      return { isBlocked: true, reason: "Summer Vacation Break" };
-    }
+    // const summerStart = new Date("2026-05-25");
+    // const summerEnd = new Date("2026-06-30");
+    // if (dateObj >= summerStart && dateObj <= summerEnd) {
+    //   return { isBlocked: true, reason: "Summer Vacation Break" };
+    // }
     
     const diwaliStart = new Date("2026-11-07");
     const diwaliEnd = new Date("2026-11-10");
@@ -688,6 +688,128 @@ export default function MarkAttendance() {
       };
     });
 
+    // Render Monthly Attendance Heatmap Grid
+    const renderCalendarHeatmap = () => {
+      const logs = stats.logs || [];
+      const [monthName, yearStr] = activeMonth.split(" ");
+      const year = parseInt(yearStr);
+      const monthsMap = {
+        January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
+        July: 6, August: 7, September: 8, October: 9, November: 10, December: 11
+      };
+      const month = monthsMap[monthName];
+      
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      let firstDayIdx = new Date(year, month, 1).getDay();
+      firstDayIdx = firstDayIdx === 0 ? 6 : firstDayIdx - 1; // Mon shift
+
+      const cells = [];
+      for (let i = 0; i < firstDayIdx; i++) {
+        cells.push({ isPadding: true });
+      }
+
+      for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        const matchedLog = logs.find(log => log.date === dateStr);
+        let status = "no-record";
+        let subject = "No sessions scheduled";
+        
+        if (matchedLog) {
+          status = matchedLog.status;
+          subject = matchedLog.subject;
+        } else {
+          const dayOfWeek = new Date(year, month, dayNum).getDay();
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            status = "weekend";
+            subject = "Weekend Off-Day";
+          }
+        }
+
+        cells.push({
+          isPadding: false,
+          dayNum,
+          dateStr,
+          status,
+          subject
+        });
+      }
+
+      const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+      return (
+        <div className="glass-card p-6 rounded-3xl border-white/5 flex flex-col gap-4">
+          <div>
+            <h4 className="text-lg font-bold text-white flex items-center gap-2">
+              📅 Monthly Attendance Heatmap Grid
+            </h4>
+            <p className="text-xs text-zinc-400">Visual matrix of your daily verified attendance statuses for the chosen month.</p>
+          </div>
+
+          <div className="flex flex-col gap-4 mt-2">
+            <div className="grid grid-cols-7 gap-2.5 text-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              {weekDays.map(d => <span key={d}>{d}</span>)}
+            </div>
+
+            <div className="grid grid-cols-7 gap-2.5">
+              {cells.map((cell, idx) => {
+                if (cell.isPadding) {
+                  return <div key={`pad-${idx}`} className="aspect-square" />;
+                }
+
+                let bgStyle = "bg-white/[0.02] border-white/5 text-zinc-600";
+                let glowEffect = "";
+
+                if (cell.status === "present") {
+                  bgStyle = "bg-emerald-500/20 border-emerald-500/30 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.15)]";
+                  glowEffect = "hover:shadow-[0_0_12px_rgba(16,185,129,0.4)]";
+                } else if (cell.status === "absent") {
+                  bgStyle = "bg-rose-500/20 border-rose-500/30 text-rose-300 shadow-[0_0_8px_rgba(239,68,68,0.15)]";
+                  glowEffect = "hover:shadow-[0_0_12px_rgba(239,68,68,0.4)]";
+                } else if (cell.status === "holiday") {
+                  bgStyle = "bg-amber-500/15 border-amber-500/20 text-amber-300";
+                } else if (cell.status === "weekend") {
+                  bgStyle = "bg-zinc-800/30 border-white/5 text-zinc-500";
+                }
+
+                return (
+                  <div
+                    key={cell.dateStr}
+                    className={`aspect-square rounded-xl border flex flex-col items-center justify-center relative group cursor-pointer transition-all duration-300 ${bgStyle} ${glowEffect}`}
+                  >
+                    <span className="text-xs font-bold font-mono">{cell.dayNum}</span>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:flex flex-col bg-[#09090b] border border-white/10 p-2.5 rounded-xl text-[10px] font-semibold text-zinc-300 z-20 whitespace-nowrap shadow-2xl gap-0.5 pointer-events-none">
+                      <span className="text-[9px] font-black uppercase text-indigo-400">{cell.dateStr}</span>
+                      <span className="text-white font-extrabold uppercase text-[10px]">Status: {cell.status}</span>
+                      <span className="text-zinc-400 font-medium">Activity: {cell.subject}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-white/5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" />
+              <span>Present</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-rose-500/20 border border-rose-500/30" />
+              <span>Absent</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-amber-500/15 border border-amber-500/20" />
+              <span>Holiday</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-zinc-800/30 border border-white/5" />
+              <span>Weekend</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div className="flex flex-col gap-8 animate-fade-in">
         
@@ -712,6 +834,24 @@ export default function MarkAttendance() {
             </select>
           </div>
         </div>
+
+        {/* Low Attendance Flashing Warning Alert */}
+        {overallRate < 75.0 && (
+          <div className="p-5 rounded-3xl border border-rose-500/20 bg-rose-500/5 text-rose-400 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-rose-500/10">
+            <div className="flex items-center gap-3.5">
+              <span className="text-2xl">⚠️</span>
+              <div className="flex flex-col gap-0.5">
+                <h4 className="font-extrabold text-sm uppercase tracking-wide text-white">Critical Low Attendance Alert</h4>
+                <p className="text-xs text-rose-300/90 leading-relaxed">
+                  Your current attendance rate of <strong>{overallRate}%</strong> is below the mandatory <strong>75%</strong> threshold required to appear in final examinations.
+                </p>
+              </div>
+            </div>
+            <div className="px-4 py-2 bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-black uppercase tracking-wider rounded-xl shadow-md whitespace-nowrap">
+              Ineligible Status
+            </div>
+          </div>
+        )}
 
         {/* Dashboard Analytics & Radial Chart */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -760,66 +900,104 @@ export default function MarkAttendance() {
 
           </div>
 
-          {/* Premium Radial Donut SVG indicator card */}
-          <div className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center text-center gap-6 border-white/5">
-            <div className="flex flex-col gap-1">
-              <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Academic Eligibility Ring</span>
-              <span className="text-[11px] font-bold text-indigo-400">Target Threshold: 75%</span>
-            </div>
+          {/* Right hand side Column (Radial Donut + Trends Timeline) */}
+          <div className="flex flex-col gap-6">
+            
+            {/* Premium Radial Donut SVG indicator card */}
+            <div className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center text-center gap-6 border-white/5 w-full">
+              <div className="flex flex-col gap-1">
+                <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Academic Eligibility Ring</span>
+                <span className="text-[11px] font-bold text-indigo-400">Target Threshold: 75%</span>
+              </div>
 
-            {/* Circular Progress Ring */}
-            <div className="relative w-44 h-44 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                {/* Track circle */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="transparent"
-                  stroke="rgba(255, 255, 255, 0.03)"
-                  strokeWidth="8"
-                />
-                {/* Progress Circle */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="transparent"
-                  stroke="url(#radialGrad)"
-                  strokeWidth="8"
-                  strokeDasharray={2 * Math.PI * 40}
-                  strokeDashoffset={2 * Math.PI * 40 * (1 - overallRate / 100)}
-                  strokeLinecap="round"
-                  className="transition-all duration-1000 ease-out"
-                />
-                
-                {/* Linear gradient definition */}
-                <defs>
-                  <linearGradient id="radialGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#06b6d4" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              {/* Inner ring text */}
-              <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-3xl font-extrabold text-white tracking-tight">{overallRate}%</span>
-                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Eligibility Rate</span>
+              {/* Circular Progress Ring */}
+              <div className="relative w-44 h-44 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  {/* Track circle */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="transparent"
+                    stroke="rgba(255, 255, 255, 0.03)"
+                    strokeWidth="8"
+                  />
+                  {/* Progress Circle */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="transparent"
+                    stroke="url(#radialGrad)"
+                    strokeWidth="8"
+                    strokeDasharray={2 * Math.PI * 40}
+                    strokeDashoffset={2 * Math.PI * 40 * (1 - overallRate / 100)}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                  
+                  {/* Linear gradient definition */}
+                  <defs>
+                    <linearGradient id="radialGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                {/* Inner ring text */}
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-3xl font-extrabold text-white tracking-tight">{overallRate}%</span>
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Eligibility Rate</span>
+                </div>
+              </div>
+
+              <div className={`p-3 rounded-2xl border text-xs font-bold leading-relaxed w-full ${
+                overallRate >= 75.0 
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" 
+                  : "border-rose-500/20 bg-rose-500/10 text-rose-400"
+              }`}>
+                {overallRate >= 75.0 
+                  ? "✓ Active status is compliant to appear in upcoming terminal exams." 
+                  : "⚠ Active status is critically below required eligibility threshold."}
               </div>
             </div>
 
-            <div className={`p-3 rounded-2xl border text-xs font-bold leading-relaxed w-full ${
-              overallRate >= 75.0 
-                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" 
-                : "border-rose-500/20 bg-rose-500/10 text-rose-400"
-            }`}>
-              {overallRate >= 75.0 
-                ? "✓ Active status is compliant to appear in upcoming terminal exams." 
-                : "⚠ Active status is critically below required eligibility threshold."}
+            {/* Monthly comparative trends card */}
+            <div className="glass-card p-6 rounded-3xl border-white/5 flex flex-col gap-4 w-full">
+              <div>
+                <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Monthly Trend Timeline</span>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider mt-1">Comparative Aggregates</h4>
+              </div>
+              <div className="flex flex-col gap-3.5">
+                {[
+                  { month: "May 2026", rate: 81.8, color: "indigo" },
+                  { month: "April 2026", rate: 90.9, color: "emerald" },
+                  { month: "March 2026", rate: 85.0, color: "cyan" }
+                ].map(item => (
+                  <div key={item.month} className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-zinc-400">{item.month}</span>
+                      <span className="text-white font-mono font-bold">{item.rate}%</span>
+                    </div>
+                    <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full ${
+                          item.color === 'emerald' ? 'bg-emerald-500' : item.color === 'cyan' ? 'bg-cyan-500' : 'bg-indigo-500'
+                        }`} 
+                        style={{ width: `${item.rate}%` }} 
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+
           </div>
 
         </div>
+
+        {/* Calendar Heatmap matrix */}
+        {renderCalendarHeatmap()}
 
         {/* Subject-Wise Attendance Breakdown Section */}
         <div className="flex flex-col gap-6 animate-fade-in">
@@ -1018,6 +1196,27 @@ export default function MarkAttendance() {
       {/* Step 1: Selection gateway (Students Assigned Classes OR Teachers Attendance Option) */}
       {step === 1 && activeSubTab === "record" && (() => {
         const checkBlock = isDateHolidayOrSunday(attendanceDate);
+        
+        // Filter classes: Admin sees all, Teachers see only their assigned classes
+        let visibleClasses = assignedClasses;
+        if (currentUser.role?.toLowerCase() === "teacher") {
+          const email = currentUser.email?.toLowerCase() || "";
+          if (email.includes("alisha")) {
+            // Alisha teaches CS / IT subjects
+            visibleClasses = assignedClasses.filter(c => 
+              c.grade.includes("10") || c.grade.includes("11-A") || c.grade.includes("12-A") || c.grade.includes("12-B")
+            );
+          } else if (email.includes("rohan")) {
+            // Rohan teaches Mathematics
+            visibleClasses = assignedClasses.filter(c => 
+              c.grade.includes("1") || c.grade.includes("5") || c.grade.includes("11-B")
+            );
+          } else {
+            // Fallback for other teachers: show a subset of classes aligned with their profile
+            visibleClasses = assignedClasses.slice(0, 3);
+          }
+        }
+
         return (
           <div className="flex flex-col gap-8 animate-fade-in">
             {/* Date Selector bar */}
@@ -1077,6 +1276,55 @@ export default function MarkAttendance() {
               </div>
             )}
 
+            {/* Intelligent low-attendance alert card for teachers/admins */}
+            <div className="glass-card p-6 rounded-2xl border border-rose-500/20 bg-rose-500/5 flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📢</span>
+                <div>
+                  <h4 className="font-extrabold text-white text-sm uppercase tracking-wide">Automatic Compliance Alerts</h4>
+                  <span className="text-xs text-zinc-400">Students flagged below 75% final-exam attendance threshold</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-1.5">
+                
+                {/* Seeded Warning Student 1 */}
+                <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/5 flex items-center justify-between gap-3 group">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center text-xs font-bold text-rose-300">
+                      SK
+                    </div>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="text-xs font-bold text-white truncate">Sana Khan</span>
+                      <span className="text-[10px] text-zinc-400 truncate">Roll: STU-2026-002 • Class 12-B</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <span className="text-xs font-black text-rose-400">60.0% Att.</span>
+                    <span className="text-[8px] font-bold text-rose-300 uppercase tracking-widest border border-rose-500/30 px-1.5 py-0.5 rounded bg-rose-500/10 animate-pulse">Ineligible</span>
+                  </div>
+                </div>
+
+                {/* Seeded warning student 2 */}
+                <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-center justify-between gap-3 group">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-300">
+                      IS
+                    </div>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="text-xs font-bold text-white truncate">Isha Patel</span>
+                      <span className="text-[10px] text-zinc-400 truncate">Roll: STU-UKG-002 • UKG</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <span className="text-xs font-black text-amber-400">74.2% Att.</span>
+                    <span className="text-[8px] font-bold text-amber-300 uppercase tracking-widest border border-amber-500/30 px-1.5 py-0.5 rounded bg-amber-500/10">Warning</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
             {/* Assigned Classes Grid Header */}
             <div className="flex flex-col gap-1.5 mt-2">
               <h4 className="text-lg font-bold text-zinc-300 uppercase tracking-widest pl-1">Student Attendance Registers</h4>
@@ -1085,7 +1333,7 @@ export default function MarkAttendance() {
 
             {/* Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {assignedClasses.map((item) => (
+              {visibleClasses.map((item) => (
                 <div
                   key={item.grade}
                   onClick={() => {
@@ -1555,5 +1803,4 @@ export default function MarkAttendance() {
 
     </div>
   );
-}
 }

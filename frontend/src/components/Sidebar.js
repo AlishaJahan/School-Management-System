@@ -53,6 +53,26 @@ export default function Sidebar() {
       roles: ["admin", "teacher", "student"]
     },
     {
+      name: "AI Performance Insights",
+      path: "/dashboard/insights",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      ),
+      roles: ["admin", "teacher", "student"]
+    },
+    {
+      name: "AI Homework Assistant",
+      path: "/dashboard/homework-assistant",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
+        </svg>
+      ),
+      roles: ["admin", "teacher", "student"]
+    },
+    {
       name: "Manage Students",
       path: "/dashboard/students",
       icon: (
@@ -81,6 +101,16 @@ export default function Sidebar() {
         </svg>
       ),
       roles: ["admin", "teacher", "student"]
+    },
+    {
+      name: user.role === "parent" ? "Teacher Messages" : "Parent Messages",
+      path: "/dashboard/messages",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+      roles: ["admin", "teacher", "parent"]
     },
     {
       name: "School Holidays",

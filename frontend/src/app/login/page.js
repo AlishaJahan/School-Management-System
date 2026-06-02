@@ -24,32 +24,32 @@ export default function LoginGateway() {
         </div>
 
         {/* Portal Entry Options Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-4xl mx-auto w-full">
           
           {/* Student Entry */}
           <Link 
             href="/login/student"
-            className="glass-card glass-card-hover p-8 rounded-3xl flex flex-col gap-6 group hover:border-indigo-500/30 relative overflow-hidden"
+            className="glass-card glass-card-hover p-6.5 rounded-3xl flex flex-col justify-between min-h-[280px] group hover:border-indigo-500/30 relative overflow-hidden"
           >
-            <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-indigo-500/15 blur-xl group-hover:scale-150 transition-transform duration-500" />
+            <div className="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-indigo-500/10 blur-xl group-hover:scale-150 transition-transform duration-500" />
             
-            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
               </svg>
             </div>
             
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">
+            <div className="flex flex-col gap-1.5 mt-4">
+              <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">
                 Student Portal
               </h3>
-              <p className="text-zinc-400 text-xs leading-relaxed">
+              <p className="text-zinc-400 text-[11px] leading-relaxed">
                 Sign in to view academic schedules, grades directory, class announcements and active profile details.
               </p>
             </div>
 
-            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-indigo-400 group-hover:translate-x-1.5 transition-transform duration-300">
+            <div className="mt-4 flex items-center gap-1 text-[11px] font-bold text-indigo-400 group-hover:translate-x-1.5 transition-transform duration-300">
               <span>Sign in as a Student</span>
               <span>→</span>
             </div>
@@ -58,27 +58,55 @@ export default function LoginGateway() {
           {/* Teacher/Admin Entry */}
           <Link 
             href="/login/teacher"
-            className="glass-card glass-card-hover p-8 rounded-3xl flex flex-col gap-6 group hover:border-cyan-500/30 relative overflow-hidden"
+            className="glass-card glass-card-hover p-6.5 rounded-3xl flex flex-col justify-between min-h-[280px] group hover:border-cyan-500/30 relative overflow-hidden"
           >
-            <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-cyan-500/15 blur-xl group-hover:scale-150 transition-transform duration-500" />
+            <div className="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-cyan-500/10 blur-xl group-hover:scale-150 transition-transform duration-500" />
             
-            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
             
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-                Teacher & Admin Portal
+            <div className="flex flex-col gap-1.5 mt-4">
+              <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">
+                Teacher & Admin
               </h3>
-              <p className="text-zinc-400 text-xs leading-relaxed">
+              <p className="text-zinc-400 text-[11px] leading-relaxed">
                 Sign in to manage student records, register class directories, review teachers list and subject specializations.
               </p>
             </div>
 
-            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-cyan-400 group-hover:translate-x-1.5 transition-transform duration-300">
+            <div className="mt-4 flex items-center gap-1 text-[11px] font-bold text-cyan-400 group-hover:translate-x-1.5 transition-transform duration-300">
               <span>Sign in as a Teacher / Admin</span>
+              <span>→</span>
+            </div>
+          </Link>
+
+          {/* Parent Entry */}
+          <Link 
+            href="/login/parent"
+            className="glass-card glass-card-hover p-6.5 rounded-3xl flex flex-col justify-between min-h-[280px] group hover:border-violet-500/30 relative overflow-hidden"
+          >
+            <div className="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-violet-500/10 blur-xl group-hover:scale-150 transition-transform duration-500" />
+            
+            <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            
+            <div className="flex flex-col gap-1.5 mt-4">
+              <h3 className="text-lg font-bold text-white group-hover:text-violet-400 transition-colors">
+                Parent Portal
+              </h3>
+              <p className="text-zinc-400 text-[11px] leading-relaxed">
+                Sign in to monitor real-time child performance averages, receive low-attendance warnings, and message class instructors.
+              </p>
+            </div>
+
+            <div className="mt-4 flex items-center gap-1 text-[11px] font-bold text-violet-400 group-hover:translate-x-1.5 transition-transform duration-300">
+              <span>Sign in as a Parent</span>
               <span>→</span>
             </div>
           </Link>
