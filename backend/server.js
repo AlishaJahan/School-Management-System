@@ -25,6 +25,17 @@ app.use('/api/teachers', require('./routes/teachers'));
 app.use('/api/insights', require('./routes/insights'));
 app.use('/api/homework', require('./routes/homework'));
 app.use('/api/parent', require('./routes/parent'));
+app.use('/api/gamification', require('./routes/gamification'));
+app.use('/api/leaves', require('./routes/leave'));
+app.use('/api/performance', require('./routes/performance'));
+app.use('/api/complaints', require('./routes/complaints'));
+app.use('/api/events', require('./routes/events'));
+app.use('/api/exams', require('./routes/exams'));
+app.use('/api/skills', require('./routes/skills'));
+app.use('/api/discussions', require('./routes/discussions'));
+
+
+
 
 // Global error handler
 app.use((err, req, res, next) => {

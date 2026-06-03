@@ -433,3 +433,175 @@ exports.regenerateSuggestions = async (req, res) => {
     res.status(500).json({ message: 'Internal server error regenerating AI suggestions' });
   }
 };
+
+// @route   GET api/insights/report-card/:studentId
+// @desc    Get AI-generated report card remarks and academic metrics
+// @access  Private (Admin, Teacher, Student for themselves, Parent for child)
+exports.getReportCard = async (req, res) => {
+  let { studentId } = req.params;
+  const currentUserId = req.user.id;
+  const currentUserRole = req.user.role?.toLowerCase();
+
+  try {
+    const pool = getPool();
+
+    // 1. Resolve studentId if special aliases are used
+    if (studentId === 'me') {
+      const [ownStudent] = await pool.query('SELECT id FROM students WHERE user_id = ?', [currentUserId]);
+      if (ownStudent.length === 0) {
+        return res.status(404).json({ message: 'No student profile associated with this user.' });
+      }
+      studentId = ownStudent[0].id;
+    } else if (studentId === 'child') {
+      const [linkedChild] = await pool.query('SELECT student_id FROM parents WHERE user_id = ?', [currentUserId]);
+      if (linkedChild.length === 0) {
+        return res.status(404).json({ message: 'No linked child associated with this parent user.' });
+      }
+      studentId = linkedChild[0].student_id;
+    }
+
+    // 2. Validate permissions
+    if (currentUserRole === 'student') {
+      const [ownStudent] = await pool.query('SELECT id FROM students WHERE user_id = ?', [currentUserId]);
+      if (ownStudent.length === 0 || ownStudent[0].id !== parseInt(studentId)) {
+        return res.status(403).json({ message: 'Access denied: You can only view your own report card.' });
+      }
+    } else if (currentUserRole === 'parent') {
+      const [linkedChild] = await pool.query('SELECT student_id FROM parents WHERE user_id = ?', [currentUserId]);
+      if (linkedChild.length === 0 || linkedChild[0].student_id !== parseInt(studentId)) {
+        return res.status(403).json({ message: 'Access denied: You can only view your linked child\'s report card.' });
+      }
+    }
+
+    // 3. Fetch student details
+    const [studentInfo] = await pool.query(`
+      SELECT s.id AS student_id, u.name, u.email, s.roll_no, s.class_grade
+      FROM students s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.id = ?
+    `, [studentId]);
+
+    if (studentInfo.length === 0) {
+      return res.status(404).json({ message: 'Student record not found.' });
+    }
+
+    const student = studentInfo[0];
+
+    // 4. Fetch marks, attendance, and badges
+    const [marks] = await pool.query('SELECT * FROM marks WHERE student_id = ?', [studentId]);
+    const [attendance] = await pool.query('SELECT * FROM attendance WHERE student_id = ?', [studentId]);
+    const [badges] = await pool.query(`
+      SELECT b.name, b.icon, b.description
+      FROM student_badges sb
+      JOIN badges b ON sb.badge_id = b.id
+      WHERE sb.student_id = ?
+    `, [studentId]);
+
+    // 5. Calculate attendance rate
+    let attendanceRate = 100;
+    let presentDays = 0;
+    let totalDays = 0;
+
+    if (attendance && attendance.length > 0) {
+      attendance.forEach(a => {
+        if (a.status === 'present') {
+          presentDays += 1;
+        }
+        totalDays += 1;
+      });
+      attendanceRate = parseFloat(((presentDays / totalDays) * 100).toFixed(1));
+    }
+
+    // 6. Calculate subject averages and overall average
+    let avgMarks = 0;
+    let totalScore = 0;
+    let subjectsCount = 0;
+    const subjectAverages = {};
+
+    if (marks && marks.length > 0) {
+      marks.forEach(m => {
+        const obtained = parseFloat(m.marks_obtained);
+        const max = parseFloat(m.max_marks || 100);
+        const percentage = (obtained / max) * 100;
+        
+        if (!subjectAverages[m.subject]) {
+          subjectAverages[m.subject] = { sum: 0, count: 0 };
+        }
+        subjectAverages[m.subject].sum += percentage;
+        subjectAverages[m.subject].count += 1;
+      });
+
+      Object.keys(subjectAverages).forEach(sub => {
+        const avg = parseFloat((subjectAverages[sub].sum / subjectAverages[sub].count).toFixed(1));
+        subjectAverages[sub].average = avg;
+        totalScore += avg;
+        subjectsCount += 1;
+      });
+
+      avgMarks = parseFloat((totalScore / subjectsCount).toFixed(1));
+    }
+
+    // 7. Dynamic AI Remarks Generator
+    const remarksList = [];
+
+    // Subject averages remarks
+    Object.keys(subjectAverages).forEach(sub => {
+      const avg = subjectAverages[sub].average;
+      if (avg >= 85) {
+        remarksList.push(`Shows excellent consistency in ${sub}.`);
+      } else if (avg < 60) {
+        remarksList.push(`Needs academic focus and improvement in ${sub}.`);
+      }
+    });
+
+    // Attendance remarks
+    if (attendanceRate < 75) {
+      remarksList.push("Needs improvement in attendance.");
+    } else if (attendanceRate >= 90) {
+      remarksList.push(`Shows excellent consistency and reliability in attendance with ${attendanceRate}% presence.`);
+    } else {
+      remarksList.push(`Attendance is stable at ${attendanceRate}%, but consistent daily attendance will support better academic outcomes.`);
+    }
+
+    // Overall academic remarks
+    if (avgMarks >= 90) {
+      remarksList.push("Demonstrates outstanding academic performance across all disciplines.");
+    } else if (avgMarks > 0 && avgMarks < 50) {
+      remarksList.push("Overall academic status is critical; requires immediate remedial counseling.");
+    }
+
+    // Badges supplementary remarks
+    if (badges.length > 0) {
+      const badgeNames = badges.map(b => b.name).join(', ');
+      remarksList.push(`Exhibits commendable school spirit, recognized with badges: ${badgeNames}.`);
+    }
+
+    // Fallback if no remarks generated
+    if (remarksList.length === 0) {
+      remarksList.push("Demonstrates steady class participation and normal academic progress.");
+    }
+
+    res.json({
+      student_id: student.student_id,
+      studentName: student.name,
+      rollNo: student.roll_no,
+      classGrade: student.class_grade,
+      email: student.email,
+      metrics: {
+        avgMarks,
+        attendanceRate,
+        presentDays,
+        totalDays,
+        subjectsCount
+      },
+      subjectAverages,
+      remarks: remarksList,
+      badges
+    });
+
+  } catch (err) {
+    console.error('Error generating AI report card:', err);
+    res.status(500).json({ message: 'Internal server error generating AI report card' });
+  }
+};
+

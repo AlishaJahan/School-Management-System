@@ -16,6 +16,11 @@ router.get('/dashboard', requireRole(['admin', 'teacher']), insightsController.g
 // @access  Private (Admins, Teachers, or matching Student)
 router.get('/student/:studentId', insightsController.getStudentInsights);
 
+// @route   GET api/insights/report-card/:studentId
+// @desc    Get AI-generated report card remarks and academic metrics
+// @access  Private (Admin, Teacher, Student for themselves, Parent for child)
+router.get('/report-card/:studentId', insightsController.getReportCard);
+
 // @route   POST api/insights/suggestions/regenerate
 // @desc    Regenerate personalized suggestions (Simulated deep analysis trigger)
 // @access  Private (Admins & Teachers)
