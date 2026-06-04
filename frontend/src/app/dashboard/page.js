@@ -35,6 +35,7 @@ export default function DashboardOverview() {
 
   // Parent Dashboard Specific States
   const [parentData, setParentData] = useState(null);
+  const [activeAlert, setActiveAlert] = useState(null);
 
   useEffect(() => {
     // 1. Get logged in user details
@@ -127,6 +128,26 @@ export default function DashboardOverview() {
       }
     };
 
+    const fetchRecentAlerts = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const res = await fetch("http://localhost:5000/api/alerts", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const criticalAlerts = data.filter(a => a.severity?.toLowerCase() === "critical");
+          if (criticalAlerts.length > 0) {
+            setActiveAlert(criticalAlerts[0]);
+          } else {
+            setActiveAlert(null);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching recent alerts for banner:", err);
+      }
+    };
+
     if (userObj.role === "student") {
       fetchStudentInsights();
     } else if (userObj.role === "parent") {
@@ -134,6 +155,7 @@ export default function DashboardOverview() {
     } else {
       fetchStats();
     }
+    fetchRecentAlerts();
   }, []);
 
   // Handler for Interactive To-Do Checklist (Admin/Teacher view)
@@ -211,6 +233,27 @@ export default function DashboardOverview() {
             🏫 Classroom grade: {parentData.classGrade}
           </div>
         </div>
+
+        {/* Critical Emergency Alert Banner */}
+        {activeAlert && (
+          <div className="p-5 rounded-3xl border border-rose-500/35 bg-rose-500/10 text-rose-300 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-rose-500/15">
+            <div className="flex items-center gap-3.5">
+              <span className="text-2xl animate-bounce">🚨</span>
+              <div className="flex flex-col gap-0.5">
+                <h4 className="font-extrabold text-sm uppercase tracking-wide text-white">CRITICAL SYSTEM PROTOCOL: {activeAlert.title}</h4>
+                <p className="text-xs text-rose-300/90 leading-relaxed">
+                  {activeAlert.message}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/alerts"
+              className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-black uppercase tracking-wider rounded-xl shadow-md whitespace-nowrap transition-all"
+            >
+              View System Directives
+            </Link>
+          </div>
+        )}
 
         {/* Low Attendance Notification Banner */}
         {isAtRisk && (
@@ -368,6 +411,27 @@ export default function DashboardOverview() {
             🏫 Class Room: {studentData.classGrade}
           </div>
         </div>
+
+        {/* Critical Emergency Alert Banner */}
+        {activeAlert && (
+          <div className="p-5 rounded-3xl border border-rose-500/35 bg-rose-500/10 text-rose-300 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-rose-500/15">
+            <div className="flex items-center gap-3.5">
+              <span className="text-2xl animate-bounce">🚨</span>
+              <div className="flex flex-col gap-0.5">
+                <h4 className="font-extrabold text-sm uppercase tracking-wide text-white">CRITICAL SYSTEM PROTOCOL: {activeAlert.title}</h4>
+                <p className="text-xs text-rose-300/90 leading-relaxed">
+                  {activeAlert.message}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/alerts"
+              className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-black uppercase tracking-wider rounded-xl shadow-md whitespace-nowrap transition-all"
+            >
+              View System Directives
+            </Link>
+          </div>
+        )}
 
         {/* Top learning stats metrics grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -623,6 +687,27 @@ export default function DashboardOverview() {
           Here is a premium breakdown of your academic system status today.
         </p>
       </div>
+
+      {/* Critical Emergency Alert Banner */}
+      {activeAlert && (
+        <div className="p-5 rounded-3xl border border-rose-500/35 bg-rose-500/10 text-rose-300 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-rose-500/15">
+          <div className="flex items-center gap-3.5">
+            <span className="text-2xl animate-bounce">🚨</span>
+            <div className="flex flex-col gap-0.5">
+              <h4 className="font-extrabold text-sm uppercase tracking-wide text-white">CRITICAL SYSTEM PROTOCOL: {activeAlert.title}</h4>
+              <p className="text-xs text-rose-300/90 leading-relaxed">
+                {activeAlert.message}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/alerts"
+            className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-black uppercase tracking-wider rounded-xl shadow-md whitespace-nowrap transition-all"
+          >
+            View System Directives
+          </Link>
+        </div>
+      )}
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -397,6 +397,48 @@ async function initializeDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
+    // Resource Sharing table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS \`resources\` (
+        \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+        \`teacher_id\` INT NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`description\` TEXT,
+        \`subject\` VARCHAR(100) NOT NULL,
+        \`resource_type\` ENUM('notes', 'pdf', 'video', 'other') NOT NULL DEFAULT 'notes',
+        \`file_url\` VARCHAR(255) NOT NULL,
+        \`class_grade\` VARCHAR(50) NOT NULL,
+        \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (\`teacher_id\`) REFERENCES \`teachers\`(\`id\`) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Colleges table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS \`colleges\` (
+        \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+        \`name\` VARCHAR(255) NOT NULL,
+        \`location\` VARCHAR(255) NOT NULL,
+        \`courses\` VARCHAR(255) NOT NULL,
+        \`ranking\` VARCHAR(50),
+        \`website\` VARCHAR(255) NOT NULL,
+        \`requirements\` TEXT
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Scholarships table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS \`scholarships\` (
+        \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+        \`name\` VARCHAR(255) NOT NULL,
+        \`provider\` VARCHAR(255) NOT NULL,
+        \`amount\` VARCHAR(100) NOT NULL,
+        \`eligibility\` TEXT,
+        \`deadline\` DATE NOT NULL,
+        \`website\` VARCHAR(255) NOT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
     console.log('Database tables successfully checked/created.');
 
     // 5. Seed default Administrator if no users exist
@@ -1205,6 +1247,89 @@ async function initializeDatabase() {
         
         console.log('Seeded default emergency alerts successfully.');
       }
+    }
+
+    // Seed default Study Resources if resources table is empty
+    const [existingResources] = await connection.query('SELECT COUNT(*) AS count FROM resources');
+    if (existingResources[0].count === 0) {
+      const [teacherCS] = await connection.query("SELECT t.id FROM teachers t JOIN users u ON t.user_id = u.id WHERE u.email = 'alisha@school.com'");
+      const [teacherMath] = await connection.query("SELECT t.id FROM teachers t JOIN users u ON t.user_id = u.id WHERE u.email = 'rohan@school.com'");
+      
+      if (teacherCS.length > 0) {
+        const teacherCSId = teacherCS[0].id;
+        await connection.query(`
+          INSERT INTO resources (teacher_id, title, description, subject, resource_type, file_url, class_grade)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+          teacherCSId,
+          'Introduction to Relational Databases & SQL Queries',
+          'A comprehensive PDF guide covering database normalization, primary/foreign keys, and standard SELECT query joins.',
+          'Computer Science',
+          'pdf',
+          'http://localhost:5000/mock-uploads/intro-to-databases.pdf',
+          'Class 12-B'
+        ]);
+
+        await connection.query(`
+          INSERT INTO resources (teacher_id, title, description, subject, resource_type, file_url, class_grade)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+          teacherCSId,
+          'React JS Fundamentals - Hooks (useState, useEffect)',
+          'An instructional video lesson explaining React components structure, state rendering lifecycle, and effects triggers.',
+          'Computer Science',
+          'video',
+          'https://www.youtube.com/embed/dpw9EHDh2bM',
+          'Class 12-B'
+        ]);
+      }
+
+      if (teacherMath.length > 0) {
+        const teacherMathId = teacherMath[0].id;
+        await connection.query(`
+          INSERT INTO resources (teacher_id, title, description, subject, resource_type, file_url, class_grade)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+          teacherMathId,
+          'Calculus limits and continuity notes',
+          'Class note summarizing limits theorems, continuity requirements, and standard derivatives solutions rules.',
+          'Mathematics',
+          'notes',
+          'http://localhost:5000/mock-uploads/limits-lecture-notes.txt',
+          'Class 12-B'
+        ]);
+      }
+      
+      console.log('Seeded default study resources successfully.');
+    }
+
+    // Seed default Colleges
+    const [existingColleges] = await connection.query('SELECT COUNT(*) AS count FROM colleges');
+    if (existingColleges[0].count === 0) {
+      await connection.query(`
+        INSERT INTO colleges (name, location, courses, ranking, website, requirements)
+        VALUES 
+        ('Massachusetts Institute of Technology (MIT)', 'Cambridge, MA, USA', 'Computer Science & AI, Data Science, Electrical Engineering', 'QS World Rank #1', 'https://mit.edu', 'Grade Average > 95% in Mathematics & CS, high Coding proficiency.'),
+        ('Stanford University', 'Stanford, CA, USA', 'Software Engineering, Symbol Systems, Applied Physics, Fine Arts', 'QS World Rank #2', 'https://stanford.edu', 'Grade Average > 93%, high Coding or Creative Arts skill profile.'),
+        ('University of Oxford', 'Oxford, United Kingdom', 'Mathematics & Computer Science, Physics, English Literature', 'QS World Rank #3', 'https://ox.ac.uk', 'Grade Average > 94%, Mathematics average > 90% and High Communication.'),
+        ('California Institute of the Arts (CalArts)', 'Valencia, CA, USA', 'Digital Media & Graphic Design, Fine Arts, Character Animation', 'QS Art Rank #5', 'https://calarts.edu', 'Arts Skill level > 75%, visual portfolio review, average grades > 80%.'),
+        ('Loughborough University', 'Loughborough, United Kingdom', 'Sports Science, Sports Coaching & Physical Education, Kinesiology', 'QS Sports Rank #1', 'https://lboro.ac.uk', 'Sports Skill level > 80%, Physical fitness trials, average grades > 75%.')
+      `);
+      console.log('Seeded default colleges successfully.');
+    }
+
+    // Seed default Scholarships
+    const [existingScholarships] = await connection.query('SELECT COUNT(*) AS count FROM scholarships');
+    if (existingScholarships[0].count === 0) {
+      await connection.query(`
+        INSERT INTO scholarships (name, provider, amount, eligibility, deadline, website)
+        VALUES 
+        ('Tech Future Pioneers Scholarship', 'Future Tech Foundation', 'Full Tuition Fee Coverage', 'Grade Average > 90% in CS and Mathematics, Coding Skill > 70%.', '2026-12-15', 'https://example.com/scholarships/tech-innovators'),
+        ('Elite Academic Merit Award', 'Global Education Trust', '$20,000 per academic year', 'Overall Grade Average > 92% across all terms, Communication Skill > 80%.', '2026-11-30', 'https://example.com/scholarships/academic-merit'),
+        ('Creative Minds Arts Fellowship', 'National Endowment for the Arts', '$15,000 annual stipend', 'Arts Skill level > 75%, portfolio submission and teacher recommendation.', '2026-10-10', 'https://example.com/scholarships/creative-minds'),
+        ('Athletic Excellence Scholarship', 'Sports Industry Council', '$10,000 award & professional coaching', 'Sports Skill level > 80%, representation in regional leagues, average grade > 75%.', '2026-09-05', 'https://example.com/scholarships/athletic-excellence')
+      `);
+      console.log('Seeded default scholarships successfully.');
     }
 
   } catch (err) {

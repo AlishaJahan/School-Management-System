@@ -33,6 +33,9 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/skills', require('./routes/skills'));
 app.use('/api/discussions', require('./routes/discussions'));
+app.use('/api/alerts', require('./routes/alerts'));
+app.use('/api/resources', require('./routes/resources'));
+app.use('/api/career', require('./routes/career'));
 
 
 
